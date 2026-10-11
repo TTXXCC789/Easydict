@@ -16,8 +16,11 @@ static NSString *const kFileExtendedAttributes = @"NSFileExtendedAttributes";
 
 // kMDItemWhereFroms
 static NSString *const kItemWhereFroms = @"com.apple.metadata:kMDItemWhereFroms";
+static NSNotificationName const EZAudioPlayerDidStartPlayingNotification = @"EZAudioPlayerDidStartPlayingNotification";
 
 @interface EZAudioPlayer () <NSSpeechSynthesizerDelegate>
+
+@property (nonatomic, assign) NSUInteger playSessionId;
 
 @property (nonatomic, strong) EZAppleService *appleService;
 @property (nonatomic, strong) NSSpeechSynthesizer *synthesizer;
@@ -82,6 +85,17 @@ static NSString *const kItemWhereFroms = @"com.apple.metadata:kMDItemWhereFroms"
                                              selector:@selector(didFinishPlaying:)
                                                  name:AVPlayerItemNewErrorLogEntryNotification
                                                object:nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleOtherAudioPlayerDidStartPlaying:)
+                                                 name:EZAudioPlayerDidStartPlayingNotification
+                                               object:nil];
+}
+
+- (void)handleOtherAudioPlayerDidStartPlaying:(NSNotification *)notification {
+    if (notification.object != self) {
+        [self stop];
+    }
 }
 
 - (void)didFinishPlaying:(NSNotification *)notification {
@@ -189,6 +203,9 @@ static NSString *const kItemWhereFroms = @"com.apple.metadata:kMDItemWhereFroms"
         return;
     }
 
+    self.playSessionId++;
+    NSUInteger currentSessionId = self.playSessionId;
+
     self.isPlaying = YES;
     self.serviceType = designatedService.serviceType ?: self.service.serviceType;
 
@@ -220,7 +237,13 @@ static NSString *const kItemWhereFroms = @"com.apple.metadata:kMDItemWhereFroms"
     EZQueryService *service = designatedService ?: self.service;
 
     // 3. get service text audio URL, and play.
+    mm_weakify(self);
     [service textToAudio:text fromLanguage:language accent:accent completionHandler:^(NSString *_Nullable url, NSError *_Nullable error) {
+        mm_strongify(self);
+        if (self.playSessionId != currentSessionId || !self.isPlaying) {
+            MMLogInfo(@"Audio request cancelled or superseded: %@", text);
+            return;
+        }
         self.currentServiceType = service.serviceType;
 
         if (!error && url.length) {
@@ -242,6 +265,7 @@ static NSString *const kItemWhereFroms = @"com.apple.metadata:kMDItemWhereFroms"
 
 - (void)stop {
     //    MMLogInfo(@"stop play");
+    self.playSessionId++;
 
     // !!!: This method won't post play end notification.
     [_player pause];
@@ -264,6 +288,10 @@ static NSString *const kItemWhereFroms = @"com.apple.metadata:kMDItemWhereFroms"
 
 /// Play system text audio.
 - (void)playSystemTextAudio:(NSString *)text language:(EZLanguage)language {
+    [_player pause];
+    [_synthesizer stopSpeaking];
+    [[NSNotificationCenter defaultCenter] postNotificationName:EZAudioPlayerDidStartPlayingNotification object:self];
+
     NSSpeechSynthesizer *synthesizer = [self.appleService playTextAudio:text textLanguage:language];
     synthesizer.delegate = self;
     self.synthesizer = synthesizer;
@@ -349,6 +377,7 @@ static NSString *const kItemWhereFroms = @"com.apple.metadata:kMDItemWhereFroms"
                  language:(EZLanguage)language
                    accent:(nullable NSString *)accent
               serviceType:(EZServiceType)serviceType {
+    NSUInteger currentSessionId = self.playSessionId;
     NSURLRequest *request = [NSURLRequest requestWithURL:URL];
     NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
     configuration.timeoutIntervalForRequest = EZNetWorkTimeoutInterval;
@@ -356,6 +385,12 @@ static NSString *const kItemWhereFroms = @"com.apple.metadata:kMDItemWhereFroms"
     NSURLSessionDownloadTask *downloadTask = [session downloadTaskWithRequest:request completionHandler:^(NSURL * _Nullable location, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (error) {
             MMLogError(@"downloadWordAudio error: %@", error);
+            [session finishTasksAndInvalidate];
+            return;
+        }
+
+        if (self.playSessionId != currentSessionId || !self.isPlaying) {
+            MMLogInfo(@"downloadWordAudio cancelled or superseded for: %@", word);
             [session finishTasksAndInvalidate];
             return;
         }
@@ -472,8 +507,12 @@ static NSString *const kItemWhereFroms = @"com.apple.metadata:kMDItemWhereFroms"
 
     // TODO: maybe we need to pre-load audio url, then play when user click.
 
+    NSUInteger currentSessionId = self.playSessionId;
     NSURL *URL = [NSURL URLWithString:urlString];
     [self loadAudioURL:URL completion:^(AVAsset *_Nullable asset) {
+        if (self.playSessionId != currentSessionId || !self.isPlaying) {
+            return;
+        }
         if (asset) {
             AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:asset];
             [self playWithPlayerItem:playerItem];
@@ -491,6 +530,9 @@ static NSString *const kItemWhereFroms = @"com.apple.metadata:kMDItemWhereFroms"
 }
 
 - (void)playWithPlayerItem:(AVPlayerItem *)playerItem {
+    [_synthesizer stopSpeaking];
+    [[NSNotificationCenter defaultCenter] postNotificationName:EZAudioPlayerDidStartPlayingNotification object:self];
+
     [self.player pause];
     [self.player replaceCurrentItemWithPlayerItem:playerItem];
     [self.player play];

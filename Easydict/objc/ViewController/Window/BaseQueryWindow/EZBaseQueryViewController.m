@@ -476,7 +476,8 @@ static BOOL ez_frame_equal_with_tolerance(CGRect lhs, CGRect rhs, CGFloat tolera
         return;
     }
 
-    // Before starting new query, we should stop the previous query.
+    // Before starting new query, stop previous query and previous audio playback.
+    [self stopPlayingQueryText];
     [self.queryModel stopAllService];
 
     // Close all resultView before querying new text.
@@ -827,6 +828,9 @@ static BOOL ez_frame_equal_with_tolerance(CGRect lhs, CGRect rhs, CGFloat tolera
 
     MMLogInfo(@"query text: %@", self.queryText.truncated);
 
+    // Stop previous audio playback before new query starts.
+    [self stopPlayingQueryText];
+
     // !!!: Reset all result before new query.
     [self resetAllResults];
 
@@ -866,8 +870,8 @@ static BOOL ez_frame_equal_with_tolerance(CGRect lhs, CGRect rhs, CGFloat tolera
                                            toLanguage:queryModel.queryTargetLanguage
                                                    to:RecordTypeHistory];
 
-    // Auto play query text if it is an English word.
-    [self autoPlayEnglishWordAudio];
+    // Auto play query text regardless of length.
+    [self autoPlayAudio];
 }
 
 - (void)queryWithModel:(EZQueryModel *)queryModel service:(EZQueryService *)service {
@@ -1907,20 +1911,24 @@ static BOOL ez_frame_equal_with_tolerance(CGRect lhs, CGRect rhs, CGFloat tolera
     return queryViewHeight;
 }
 
-#pragma mark - Auto play English word
+#pragma mark - Auto play audio
 
-- (void)autoPlayEnglishWordAudio {
+- (void)autoPlayAudio {
     if (!self.config.autoPlayAudio) {
         return;
     }
 
-    BOOL isEnglishWord = [self.queryText isEnglishWordWithLanguage:self.queryModel.queryFromLanguage];
-    if (!isEnglishWord) {
+    if (self.queryText.length == 0) {
         return;
     }
 
-    MMLogInfo(@"Auto play English word audio: %@", self.queryText);
+    MMLogInfo(@"Auto play audio: %@", self.queryText.truncated);
+    [self stopPlayingQueryText];
     [self togglePlayQueryText:YES];
+}
+
+- (void)autoPlayEnglishWordAudio {
+    [self autoPlayAudio];
 }
 
 #pragma mark -
