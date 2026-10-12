@@ -18,6 +18,15 @@
 <a href="./README_ZH.md">中文</a> &nbsp;&nbsp;|&nbsp;&nbsp; <a href="./README.md">English</a>
 </div>
 
+> [!IMPORTANT]
+> **开源分叉声明与原作者致敬 (Fork Notice & Attribution)**
+> - **原项目作者与出处**：Easydict 最初由 [@tisfeng](https://github.com/tisfeng) 独立设计与开发，原官方开源主页为 [tisfeng/Easydict](https://github.com/tisfeng/Easydict)。本项目所有核心功能及设计归原作者所有，特此致以诚挚的敬意与感谢！
+> - **开源协议**：本仓库为个人功能增强分支（Fork），严格遵循原作者的 [GNU General Public License v3.0 (GPL-3.0)](https://github.com/tisfeng/Easydict/blob/main/LICENSE) 开源许可协议。
+> - **本分支主要优化增强 (Enhancements)**：
+>   1. **全长度文本自动朗读**：解除原版自动发音仅限 30 字符以内短词/短语的限制，完美支持任意长度的单词、词组、长句与段落划词发声。
+>   2. **音频队列防重叠控制**：新增全局音频互斥停播机制，修复连续触发发音时音频重叠混乱的问题。
+>   3. **独立免编译动态补丁包**：提供一套即插即用的 Mach-O 动态注入工具（位于 [`patches/auto-pronounce-all-lengths/`](./patches/auto-pronounce-all-lengths/README.md)），支持直接修补官方已安装的 `/Applications/Easydict.app`。
+
 ## Easydict
 
 `Easydict` 是一个简洁易用的词典翻译 macOS App，能够轻松优雅地查找单词或翻译文本。

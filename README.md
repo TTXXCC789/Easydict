@@ -18,6 +18,15 @@
 <a href="./README_ZH.md">中文</a> &nbsp;&nbsp;|&nbsp;&nbsp; <a href="./README.md">English</a>
 </div>
 
+> [!IMPORTANT]
+> **Fork Notice & Attribution / 分叉说明与原作者致谢**
+> - **Original Author & Project**: Easydict was originally designed and developed by [@tisfeng](https://github.com/tisfeng) at [tisfeng/Easydict](https://github.com/tisfeng/Easydict). All core credits, design, and copyrights belong to the original author.
+> - **License**: This repository is a community enhancement fork distributed under the [GNU General Public License v3.0 (GPL-3.0)](https://github.com/tisfeng/Easydict/blob/main/LICENSE).
+> - **Modifications in this Fork**:
+>   1. **All-Lengths Auto Pronunciation**: Removes the 30-character length restriction on automatic query pronunciation, supporting words, phrases, full sentences, and paragraphs.
+>   2. **Audio Overlap Prevention**: Ensures preceding speech audio is immediately halted before new audio begins, preventing overlapping sound streams.
+>   3. **Standalone Runtime Patch Toolkit**: Includes a one-click dynamic library injector (`patches/auto-pronounce-all-lengths/`) to patch existing installed `/Applications/Easydict.app` without needing to build the full Xcode project.
+
 ## Easydict
 
 `Easydict` is a concise and easy-to-use translation dictionary macOS App that allows you to easily and elegantly look up words or translate text.
