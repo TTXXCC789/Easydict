@@ -1,0 +1,16 @@
+{
+  "kit_version": "2026.10.29",
+  "supported_easydict_versions": [
+    "2.23.0"
+  ],
+  "tested_macos": "26.2",
+  "tested_runtime_architecture": "arm64",
+  "compiled_architectures": [
+    "arm64",
+    "x86_64"
+  ],
+  "base_fork_commit": "e4fdd12de127dc0f6fd54f4b3c05d6a49a60174a",
+  "runtime_source_sha256": "b35684ad6f7ac9ea7beaf1f5d8d1e002c3ab661067f15f37005d9844de796ff0",
+  "requires_local_source_build": true,
+  "contains_complete_app": false
+}

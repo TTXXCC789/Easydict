@@ -27,6 +27,10 @@
 >   2. **音频队列防重叠控制**：新增全局音频互斥停播机制，修复连续触发发音时音频重叠混乱的问题。
 >   3. **独立免编译动态补丁包**：提供一套即插即用的 Mach-O 动态注入工具（位于 [`patches/auto-pronounce-all-lengths/`](./patches/auto-pronounce-all-lengths/README.md)），支持直接修补官方已安装的 `/Applications/Easydict.app`。
 
+## 发音修复套件 · 2026-10-29
+
+新版[源码套件](./kits/pronunciation-repair/README.md)修复 US/UK 音标按钮在空闲时点击不发声的问题，并记录重新签名后旧 Accessibility 授权失效的排障过程。包含先处理副本的安装器、备份与回退工具、[中文用户笔记与使用心得](./kits/pronunciation-repair/docs/USER-NOTEBOOK.zh-CN.md)、[SOP](./kits/pronunciation-repair/docs/SOP.zh-CN.md)和[可下载 ZIP](./kits/releases/Easydict-Pronunciation-Kit-2026.10.29.zip)。安装器只支持 **Easydict 2.23.0**；其他环境的验证范围请看套件记录。
+
 ## Easydict
 
 `Easydict` 是一个简洁易用的词典翻译 macOS App，能够轻松优雅地查找单词或翻译文本。

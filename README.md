@@ -27,6 +27,10 @@
 >   2. **Audio Overlap Prevention**: Ensures preceding speech audio is immediately halted before new audio begins, preventing overlapping sound streams.
 >   3. **Standalone Runtime Patch Toolkit**: Includes a one-click dynamic library injector (`patches/auto-pronounce-all-lengths/`) to patch existing installed `/Applications/Easydict.app` without needing to build the full Xcode project.
 
+## Pronunciation repair kit · 2026-10-29
+
+The updated [source kit](./kits/pronunciation-repair/README.md) repairs idle US/UK speaker clicks and documents the stale Accessibility approval encountered after re-signing. It includes staged installation, backup/restore, a [Chinese user notebook](./kits/pronunciation-repair/docs/USER-NOTEBOOK.zh-CN.md), [SOP](./kits/pronunciation-repair/docs/SOP.zh-CN.md), and [downloadable ZIP](./kits/releases/Easydict-Pronunciation-Kit-2026.10.29.zip). The installer supports **Easydict 2.23.0 only**; full validation limits are recorded with the kit.
+
 ## Easydict
 
 `Easydict` is a concise and easy-to-use translation dictionary macOS App that allows you to easily and elegantly look up words or translate text.

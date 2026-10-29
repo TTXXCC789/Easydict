@@ -1,0 +1,51 @@
+--- a/patches/auto-pronounce-all-lengths/libeasydict_patch.m
++++ b/patches/auto-pronounce-all-lengths/libeasydict_patch.m
+@@ -12,6 +12,7 @@
+ static char kPreservingSpeechKey;
+ static char kLocalHoverMonitorKey;
+ static char kGlobalHoverMonitorKey;
++static char kPhoneticRequestKey;
+ 
+ // MARK: - Method Swizzling Helper
+ 
+@@ -256,6 +257,19 @@
+ 
+ @implementation NSObject (EZAudioPlayerPatch)
+ 
++// Phonetic buttons supply an audio URL on the initial call. Mark only their
++// synchronous entry, so a later network callback still uses cancellation checks.
++- (void)patched_playWordPhonetic:(id)wordPhonetic designatedService:(id)designatedService {
++    id previousRequest = objc_getAssociatedObject(self, &kPhoneticRequestKey);
++    objc_setAssociatedObject(self, &kPhoneticRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
++    @try {
++        ((void (*)(id, SEL, id, id))objc_msgSend)(
++            self, @selector(patched_playWordPhonetic:designatedService:), wordPhonetic, designatedService);
++    } @finally {
++        objc_setAssociatedObject(self, &kPhoneticRequestKey, previousRequest, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
++    }
++}
++
+ - (void)patched_speechSynthesizer:(id)sender didFinishSpeaking:(BOOL)finished {
+     if (sender == [self valueForKey:@"synthesizer"]) {
+         ((void (*)(id, SEL, id, BOOL))objc_msgSend)(self, @selector(patched_speechSynthesizer:didFinishSpeaking:), sender, finished);
+@@ -272,8 +286,8 @@
+         return;
+     }
+ 
+-    if (!audioURL || audioURL.length == 0) {
+-        // Initial play request on this audio player
++    if (!audioURL.length || [objc_getAssociatedObject(self, &kPhoneticRequestKey) boolValue]) {
++        // Initial TTS request or an explicit phonetic speaker click
+         NSNumber *counterNum = objc_getAssociatedObject(self, kTokenCounterKey);
+         uint64_t counter = counterNum ? [counterNum unsignedLongLongValue] + 1 : 1;
+         objc_setAssociatedObject(self, kTokenCounterKey, @(counter), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+@@ -366,6 +380,9 @@
+         Class audioPlayerClass = NSClassFromString(@"EZAudioPlayer");
+         if (audioPlayerClass) {
+             SwizzleInstanceMethod(audioPlayerClass,
++                                  @selector(playWordPhonetic:designatedService:),
++                                  @selector(patched_playWordPhonetic:designatedService:));
++            SwizzleInstanceMethod(audioPlayerClass,
+                                   @selector(playTextAudio:language:accent:audioURL:designatedService:forceURL:),
+                                   @selector(patched_playTextAudio:language:accent:audioURL:designatedService:forceURL:));
+             SwizzleInstanceMethod(audioPlayerClass,
